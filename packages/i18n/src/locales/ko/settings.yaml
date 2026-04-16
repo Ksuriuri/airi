@@ -836,6 +836,22 @@ pages:
       novita:
         description: novita.ai
         title: Novita
+      noiz-tts:
+        api-key-hint: API 키 발급
+        voice-clone-hint: 사용자 지정 음성(음성 복제)을 사용하려면 다음을 방문하세요
+        description: noiz.ai
+        title: Noiz TTS
+        fields:
+          field:
+            target-lang:
+              label: 대상 언어
+              description: 'Noiz 대상 언어 코드 (예: zh, en, zh+en)'
+            similarity-enh:
+              label: 유사도 향상
+              description: 클론 음성의 유사도를 높이기 위해 유사도 향상 활성화
+            emo:
+              label: 감정 JSON
+              description: '선택적 감정 JSON (예: {"Sadness":0.2,"Surprise":0.5})'
       ollama:
         description: ollama.ai
         title: Ollama

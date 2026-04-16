@@ -836,6 +836,22 @@ pages:
       novita:
         description: novita.ai
         title: Novita
+      noiz-tts:
+        api-key-hint: Lấy API key tại
+        voice-clone-hint: Để sử dụng giọng nói tùy chỉnh (nhân bản giọng nói), vui lòng truy cập
+        description: noiz.ai
+        title: Noiz TTS
+        fields:
+          field:
+            target-lang:
+              label: Ngôn ngữ đích
+              description: 'Mã ngôn ngữ đích Noiz (vd. zh, en, zh+en)'
+            similarity-enh:
+              label: Tăng cường độ tương đồng
+              description: Bật tăng cường độ tương đồng để giọng nhân bản chính xác hơn
+            emo:
+              label: Cảm xúc JSON
+              description: 'JSON cảm xúc tùy chọn (vd. {"Sadness":0.2,"Surprise":0.5})'
       ollama:
         description: ollama.ai
         title: Ollama

@@ -171,6 +171,9 @@ defineExpose({
         layout="horizontal"
       />
 
+      <!-- Slot for additional provider-specific UI before the action button -->
+      <slot name="before-actions" />
+
       <!-- Playground actions -->
       <button
         border="neutral-800 dark:neutral-200 solid 2" transition="border duration-250 ease-in-out"

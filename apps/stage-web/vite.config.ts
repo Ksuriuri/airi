@@ -89,6 +89,13 @@ export default defineConfig({
         `${resolve(join(import.meta.dirname, '..', '..', 'packages', 'stage-pages', 'src'))}/*.vue`,
       ],
     },
+    proxy: {
+      '/api/noiz': {
+        target: 'https://noiz.ai',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/api\/noiz/, '/v1'),
+      },
+    },
   },
   build: {
     sourcemap: true,

@@ -836,6 +836,22 @@ pages:
       novita:
         description: novita.ai
         title: Novita
+      noiz-tts:
+        api-key-hint: 在此获取 API Key：
+        voice-clone-hint: 若要使用自定义声线（声音克隆），请前往
+        description: noiz.ai
+        title: Noiz TTS
+        fields:
+          field:
+            target-lang:
+              label: 目标语言
+              description: 'Noiz 目标语言代码，例如 zh、en、zh+en'
+            similarity-enh:
+              label: 增强相似度
+              description: 启用相似度增强以获得更接近的克隆声音
+            emo:
+              label: 情感 JSON
+              description: '可选的情感 JSON，例如 {"Sadness":0.2,"Surprise":0.5}'
       ollama:
         description: ollama.ai
         title: Ollama

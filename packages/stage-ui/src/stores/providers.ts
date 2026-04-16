@@ -1001,6 +1001,186 @@ export const useProvidersStore = defineStore('providers', () => {
         },
       },
     },
+    'noiz-tts': {
+      id: 'noiz-tts',
+      category: 'speech',
+      tasks: ['text-to-speech'],
+      nameKey: 'settings.pages.providers.provider.noiz-tts.title',
+      name: 'Noiz TTS',
+      descriptionKey: 'settings.pages.providers.provider.noiz-tts.description',
+      description: 'noiz.ai',
+      icon: 'i-solar:soundwave-bold-duotone',
+      defaultOptions: () => ({
+        baseUrl: 'https://noiz.ai/v1/',
+        apiKey: '',
+        outputFormat: 'mp3',
+        qualityPreset: 3,
+        speed: 1,
+        emo: '',
+      }),
+      createProvider: async (config) => {
+        const toString = (value: unknown) => typeof value === 'string' ? value.trim() : ''
+        const apiKey = toString(config.apiKey)
+        let baseUrlRaw = toString(config.baseUrl) || 'https://noiz.ai/v1/'
+        // NOTICE: In web dev mode, proxy Noiz API through Vite to avoid CORS.
+        // The proxy is configured in apps/stage-web/vite.config.ts as /api/noiz → https://noiz.ai/v1
+        if (!isStageTamagotchi() && import.meta.env.DEV && /^https?:\/\/noiz\.ai\/v1\/?$/i.test(baseUrlRaw))
+          baseUrlRaw = typeof window !== 'undefined' ? `${window.location.origin}/api/noiz/` : '/api/noiz/'
+        const baseUrl = baseUrlRaw.endsWith('/') ? baseUrlRaw.slice(0, -1) : baseUrlRaw
+
+        const outputFormat = (toString(config.outputFormat) || 'mp3') as 'mp3' | 'wav'
+        const qualityPreset = typeof config.qualityPreset === 'number' ? config.qualityPreset : 3
+        const speed = typeof config.speed === 'number' ? config.speed : 1
+        const emo = toString(config.emo)
+
+        if (!apiKey) {
+          throw new Error('Noiz TTS API key is required.')
+        }
+
+        const provider: SpeechProvider = {
+          speech: () => {
+            return {
+              baseURL: `${baseUrl}/`,
+              model: 'noiz-tts',
+              fetch: async (_input: RequestInfo | URL, init?: RequestInit) => {
+                try {
+                  if (!init?.body || typeof init.body !== 'string') {
+                    throw new Error('Invalid request body for Noiz TTS')
+                  }
+
+                  const body = JSON.parse(init.body) as { input?: string, voice?: string }
+                  const text = body.input || ''
+                  const voiceId = body.voice || ''
+
+                  if (!text.trim()) {
+                    throw new Error('Text is required for Noiz TTS')
+                  }
+
+                  const form = new FormData()
+                  form.append('text', text)
+
+                  if (voiceId) {
+                    form.append('voice_id', voiceId)
+                  }
+
+                  form.append('quality_preset', String(qualityPreset))
+                  form.append('output_format', outputFormat)
+                  form.append('speed', String(speed))
+
+                  if (emo)
+                    form.append('emo', emo)
+
+                  // NOTICE: Noiz API requires the raw base64-encoded key without any prefix.
+                  // Adding "Bearer " or "APIKEY " causes 401. See https://docs.noiz.ai/api-documentation/text-to-speech
+                  const authHeader = apiKey.replace(/^Bearer\s+/i, '')
+
+                  const response = await fetch(`${baseUrl}/text-to-speech`, {
+                    method: 'POST',
+                    headers: {
+                      Authorization: authHeader,
+                    },
+                    body: form,
+                  })
+
+                  if (!response.ok) {
+                    const errorText = await response.text().catch(() => '')
+                    throw new Error(`Noiz TTS request failed: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`)
+                  }
+
+                  const buffer = await response.arrayBuffer()
+
+                  return new Response(buffer, {
+                    status: 200,
+                    headers: {
+                      'Content-Type': response.headers.get('Content-Type') || (outputFormat === 'wav' ? 'audio/wav' : 'audio/mpeg'),
+                    },
+                  })
+                }
+                catch (error) {
+                  console.error('Noiz TTS generation failed:', error)
+                  throw error
+                }
+              },
+            }
+          },
+        }
+
+        return provider as SpeechProviderWithExtraOptions<string, Record<string, unknown>>
+      },
+      capabilities: {
+        listModels: async () => {
+          return [
+            {
+              id: 'noiz-tts',
+              name: 'Noiz TTS',
+              provider: 'noiz-tts',
+              description: 'Default model for Noiz TTS',
+              contextLength: 0,
+              deprecated: false,
+            },
+          ]
+        },
+        listVoices: async (config) => {
+          const apiKey = (config.apiKey as string || '').trim()
+          if (!apiKey)
+            return []
+
+          let baseUrlRaw = (config.baseUrl as string || 'https://noiz.ai/v1/').trim()
+          if (!isStageTamagotchi() && typeof window !== 'undefined' && /^https?:\/\/noiz\.ai\/v1\/?$/i.test(baseUrlRaw))
+            baseUrlRaw = `${window.location.origin}/api/noiz/`
+
+          const baseUrl = baseUrlRaw.endsWith('/') ? baseUrlRaw.slice(0, -1) : baseUrlRaw
+          const authHeader = apiKey.replace(/^Bearer\s+/i, '')
+
+          try {
+            // Fetch custom voices
+            const fetchVoices = async (type: string) => {
+              const res = await fetch(`${baseUrl}/voices?voice_type=${type}&limit=100`, {
+                headers: { Authorization: authHeader },
+              })
+              if (!res.ok)
+                return []
+              const json = await res.json()
+              return json.data?.voices || []
+            }
+
+            const custom = await fetchVoices('custom')
+
+            return custom.map((voice: any) => ({
+              id: voice.voice_id,
+              name: voice.display_name,
+              provider: 'noiz-tts',
+              description: voice.labels,
+              previewURL: voice.sample,
+              languages: [],
+            }))
+          }
+          catch (e) {
+            console.error('[noiz-tts] Failed to list voices:', e)
+            return []
+          }
+        },
+      },
+      validators: {
+        validateProviderConfig: (config) => {
+          const errors: Error[] = []
+          if (!config.apiKey)
+            errors.push(new Error('API key is required.'))
+          if (!config.baseUrl)
+            errors.push(new Error('Base URL is required. Default to https://noiz.ai/v1/ for official Noiz API.'))
+
+          const res = baseUrlValidator.value(config.baseUrl)
+          if (res)
+            return res
+
+          return {
+            errors,
+            reason: errors.map(e => e.message).join(', '),
+            valid: errors.length === 0,
+          }
+        },
+      },
+    },
     'deepgram-tts': {
       id: 'deepgram-tts',
       category: 'speech',

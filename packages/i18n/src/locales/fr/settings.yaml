@@ -836,6 +836,22 @@ pages:
       novita:
         description: novita.ai
         title: Novita
+      noiz-tts:
+        api-key-hint: Obtenir la clé API
+        voice-clone-hint: Pour utiliser des voix personnalisées (clonage vocal), veuillez visiter
+        description: noiz.ai
+        title: Noiz TTS
+        fields:
+          field:
+            target-lang:
+              label: Langue cible
+              description: 'Code de langue cible Noiz (ex. zh, en, zh+en)'
+            similarity-enh:
+              label: Améliorer la similarité
+              description: Activer l'amélioration de la similarité pour une voix clonée plus fidèle
+            emo:
+              label: Émotion JSON
+              description: 'JSON d''émotion optionnel (ex. {"Sadness":0.2,"Surprise":0.5})'
       ollama:
         description: ollama.ai
         title: Ollama
