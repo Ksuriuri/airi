@@ -11,6 +11,7 @@ import { useDiscordStore } from '../stores/modules/discord'
 import { useFactorioStore } from '../stores/modules/gaming-factorio'
 import { useMinecraftStore } from '../stores/modules/gaming-minecraft'
 import { useHearingStore } from '../stores/modules/hearing'
+import { usePerceptionStore } from '../stores/modules/perception'
 import { useSpeechStore } from '../stores/modules/speech'
 import { useTwitterStore } from '../stores/modules/twitter'
 import { useVisionStore } from '../stores/modules/vision'
@@ -34,6 +35,7 @@ export function useModulesList() {
   const consciousnessStore = useConsciousnessStore()
   const speechStore = useSpeechStore()
   const hearingStore = useHearingStore()
+  const perceptionStore = usePerceptionStore()
   const visionStore = useVisionStore()
   const discordStore = useDiscordStore()
   const twitterStore = useTwitterStore()
@@ -69,6 +71,15 @@ export function useModulesList() {
       icon: 'i-solar:microphone-3-bold-duotone',
       to: '/settings/modules/hearing',
       configured: hearingStore.configured,
+      category: 'essential',
+    },
+    {
+      id: 'perception',
+      name: t('settings.pages.modules.perception.title'),
+      description: t('settings.pages.modules.perception.description'),
+      icon: 'i-solar:soundwave-bold-duotone',
+      to: '/settings/modules/perception',
+      configured: perceptionStore.configured,
       category: 'essential',
     },
     {

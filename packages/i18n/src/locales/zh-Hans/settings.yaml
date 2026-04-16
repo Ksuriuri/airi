@@ -447,6 +447,45 @@ pages:
               注意：如果您的提供商不支持 verbose_json 结果处理，此设置将不会有任何效果。
             verbose-json-unsupported: >-
               如果您的提供商没有返回 verbose_json 结果。置信度阈值将不会影响转录。
+    perception:
+      title: 环境感知
+      description: 通过 WebSocket 进行环境音频分类
+      sections:
+        section:
+          connection:
+            title: 连接设置
+            description: 配置音频分类的 WebSocket 端点
+          audio:
+            title: 音频设置
+            description: 配置音频编码和采样率
+          threshold:
+            title: 触发阈值
+            description: >-
+              仅在音量超过阈值时进行分类。
+              在响亮片段前后保留一小段上下文音频。
+            volume-label: 音量阈值
+            volume-description: >-
+              开始捕获音频的最低 RMS 音量。值越低越敏感。
+              可以在调整时观看实时音量表。
+            padding-label: 上下文填充
+            padding-description: >-
+              在响亮片段前后保留的音频秒数，以便分类器获得周围上下文。
+          auto-respond:
+            label: 自动回应检测到的声音
+            description: >-
+              启用后，AI 会在检测到环境声音事件时自动回复。
+              禁用则仅作为被动上下文注入到你的对话中。
+          status:
+            enabled: 环境感知已启用
+            disabled: 环境感知已禁用
+            connected: 已连接到分类服务器
+            disconnected: 未连接
+            running: 管线正在运行
+            stopped: 管线已停止
+          test:
+            title: 实时分类测试
+            description: >-
+              查看环境中的实时音频分类结果。请确保已选择音频输入设备并且环境感知模块已启用。
     memory-long-term:
       description: 长期记忆
       title: 长期记忆

@@ -473,6 +473,49 @@ pages:
             verbose-json-unsupported: >-
               Your provider did not return verbose_json segments. Confidence
               filtering had no effect on the last transcription.
+    perception:
+      title: Perception
+      description: Environmental audio classification via WebSocket
+      sections:
+        section:
+          connection:
+            title: Connection
+            description: Configure the WebSocket endpoint for audio classification
+          audio:
+            title: Audio Settings
+            description: Configure audio encoding and sample rate
+          threshold:
+            title: Trigger Threshold
+            description: >-
+              Only classify audio when the volume exceeds a threshold.
+              A short pre-roll and post-roll context is kept around the loud segment.
+            volume-label: Volume Threshold
+            volume-description: >-
+              Minimum RMS level to start capturing audio. Lower values are more
+              sensitive. Adjust while watching the live volume meter.
+            padding-label: Context Padding
+            padding-description: >-
+              Seconds of audio to keep before and after the loud segment so the
+              classifier has surrounding context.
+          auto-respond:
+            label: Auto-respond to detected sounds
+            description: >-
+              When enabled, the AI will automatically respond whenever a sound
+              event is detected in the environment. Disable if you only want
+              perception as passive context injected into your conversations.
+          status:
+            enabled: Perception is enabled
+            disabled: Perception is disabled
+            connected: Connected to classification server
+            disconnected: Not connected
+            running: Pipeline is running
+            stopped: Pipeline is stopped
+          test:
+            title: Live Classification Test
+            description: >-
+              View real-time audio classification results from the environment.
+              Make sure you have selected an audio input device and the
+              perception module is enabled.
     memory-long-term:
       description: Long-term memory specific settings and management
       title: Long-Term Memory

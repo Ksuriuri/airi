@@ -1,5 +1,5 @@
 diff --git a/dist/index.d.ts b/dist/index.d.ts
-index e184d851f8f0dec7456bab129ed90eaad8944125..e363d3d15261fa57831cf4d6fee384644bd45d00 100644
+index e184d851f8f0dec7456bab129ed90eaad8944125..269428272d799c6520786d47f4c5d0725abacbc4 100644
 --- a/dist/index.d.ts
 +++ b/dist/index.d.ts
 @@ -1,8 +1,10 @@
@@ -27,10 +27,25 @@ index e184d851f8f0dec7456bab129ed90eaad8944125..e363d3d15261fa57831cf4d6fee38464
      stopWhen?: StopCondition;
      /**
 diff --git a/dist/index.js b/dist/index.js
-index 6353da4d45ad65340104530d83b5337bba8d9d77..34e6e4fda7f390be6334fe3eadcbc5199957e998 100644
+index 6353da4d45ad65340104530d83b5337bba8d9d77..ea9cbd72178ea9d5fec467029c1e42ee507292dd 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -139,6 +139,10 @@ const streamText = (options) => {
+@@ -35,9 +35,13 @@ const streamText = (options) => {
+     });
+     const { body: stream } = await chat({
+       ...options,
++      captureToolErrors: void 0,
+       maxSteps: void 0,
+       messages: stepOptions.messages,
+       model: stepOptions.model,
++      onToolCallFinish: void 0,
++      onToolCallStart: void 0,
++      repairToolCall: void 0,
+       stopWhen: void 0,
+       stream: true,
+       streamOptions: options.streamOptions != null ? objCamelToSnake(options.streamOptions) : void 0,
+@@ -138,7 +142,11 @@ const streamText = (options) => {
+       const results = await Promise.all(
          validToolCalls.map(async (toolCall) => executeTool({
            abortSignal: options.abortSignal,
 +          captureToolErrors: options.captureToolErrors,
@@ -41,7 +56,7 @@ index 6353da4d45ad65340104530d83b5337bba8d9d77..34e6e4fda7f390be6334fe3eadcbc519
            toolCall,
            tools: options.tools
          }))
-@@ -148,7 +151,10 @@ const streamText = (options) => {
+@@ -148,7 +156,10 @@ const streamText = (options) => {
          toolResults.push(completionToolResult);
          messages.push(message);
          pushEvent({ ...completionToolCall, type: "tool-call" });

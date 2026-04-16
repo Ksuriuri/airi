@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { SpeechProviderWithExtraOptions } from '@xsai-ext/providers/utils'
 
+import { errorMessageFrom } from '@moeru/std'
 import {
   Alert,
   ErrorContainer,
@@ -118,49 +119,43 @@ async function generateTestSpeech() {
   if (useSSML.value && !ssmlText.value.trim())
     return
 
-  const provider = await providersStore.getProviderInstance(activeSpeechProvider.value) as SpeechProviderWithExtraOptions<string, any>
-  if (!provider) {
-    console.error('Failed to initialize speech provider')
-    return
-  }
-
-  const providerConfig = providersStore.getProviderConfig(activeSpeechProvider.value)
-
-  // For OpenAI Compatible providers, fall back to provider config for model and voice
-  let model = activeSpeechModel.value
-  let voice = activeSpeechVoice.value
-
-  if (activeSpeechProvider.value === 'openai-compatible-audio-speech') {
-    if (!model && providerConfig?.model) {
-      model = providerConfig.model as string
-    }
-    if (!voice && providerConfig?.voice) {
-      voice = {
-        id: providerConfig.voice as string,
-        name: providerConfig.voice as string,
-        description: providerConfig.voice as string,
-        previewURL: '',
-        languages: [{ code: 'en', title: 'English' }],
-        provider: activeSpeechProvider.value,
-        gender: 'neutral',
-      }
-    }
-  }
-
-  if (!model) {
-    console.error('No model selected')
-    return
-  }
-
-  if (!voice) {
-    console.error('No voice selected')
-    return
-  }
-
   isGenerating.value = true
   errorMessage.value = ''
 
   try {
+    const provider = await providersStore.getProviderInstance(activeSpeechProvider.value) as SpeechProviderWithExtraOptions<string, any>
+    if (!provider)
+      throw new Error('Failed to initialize speech provider')
+
+    const providerConfig = providersStore.getProviderConfig(activeSpeechProvider.value)
+
+    // For OpenAI Compatible providers, fall back to provider config for model and voice
+    let model = activeSpeechModel.value
+    let voice = activeSpeechVoice.value
+
+    if (activeSpeechProvider.value === 'openai-compatible-audio-speech') {
+      if (!model && providerConfig?.model) {
+        model = providerConfig.model as string
+      }
+      if (!voice && providerConfig?.voice) {
+        voice = {
+          id: providerConfig.voice as string,
+          name: providerConfig.voice as string,
+          description: providerConfig.voice as string,
+          previewURL: '',
+          languages: [{ code: 'en', title: 'English' }],
+          provider: activeSpeechProvider.value,
+          gender: 'neutral',
+        }
+      }
+    }
+
+    if (!model)
+      throw new Error('No model selected')
+
+    if (!voice)
+      throw new Error('No voice selected')
+
     // Stop any currently playing audio
     if (audioUrl.value) {
       stopTestAudio()
@@ -190,7 +185,7 @@ async function generateTestSpeech() {
   }
   catch (error) {
     console.error('Error generating speech:', error)
-    errorMessage.value = error instanceof Error ? error.message : 'An unknown error occurred'
+    errorMessage.value = errorMessageFrom(error) ?? 'An unknown error occurred'
   }
   finally {
     isGenerating.value = false
@@ -632,6 +627,9 @@ function handleDeleteProvider(providerId: string) {
                 <span>Stop</span>
               </div>
             </button>
+          </div>
+          <div v-if="errorMessage" class="text-sm text-red-500">
+            {{ errorMessage }}
           </div>
           <audio v-if="audioUrl" ref="audioPlayer" :src="audioUrl" controls class="mt-2 w-full" />
         </div>

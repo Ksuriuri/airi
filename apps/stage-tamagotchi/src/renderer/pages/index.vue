@@ -21,11 +21,13 @@ import {
   resolveComponentStateToRuntimePhase,
 } from '@proj-airi/stage-ui/components/scenarios/settings/model-settings/runtime'
 import { WidgetStage } from '@proj-airi/stage-ui/components/scenes'
+import { usePerceptionAutoRespond } from '@proj-airi/stage-ui/composables'
 import { useAudioRecorder } from '@proj-airi/stage-ui/composables/audio/audio-recorder'
 import { useCanvasPixelIsTransparentAtPoint } from '@proj-airi/stage-ui/composables/canvas-alpha'
 import { useVAD } from '@proj-airi/stage-ui/stores/ai/models/vad'
 import { useLive2d } from '@proj-airi/stage-ui/stores/live2d'
 import { useHearingSpeechInputPipeline } from '@proj-airi/stage-ui/stores/modules/hearing'
+import { usePerceptionPipeline, usePerceptionStore } from '@proj-airi/stage-ui/stores/modules/perception'
 import { useOnboardingStore } from '@proj-airi/stage-ui/stores/onboarding'
 import { useSettings, useSettingsAudioDevice } from '@proj-airi/stage-ui/stores/settings'
 import { refDebounced, useBroadcastChannel } from '@vueuse/core'
@@ -219,6 +221,8 @@ const { startRecord, stopRecord, onStopRecord } = useAudioRecorder(stream)
 const hearingPipeline = useHearingSpeechInputPipeline()
 const { transcribeForRecording, transcribeForMediaStream, stopStreamingTranscription } = hearingPipeline
 const { supportsStreamInput } = storeToRefs(hearingPipeline)
+const perceptionStore = usePerceptionStore()
+const perceptionPipeline = usePerceptionPipeline()
 const chatSyncStore = useChatSyncStore()
 const shouldUseStreamInput = computed(() => supportsStreamInput.value && !!stream.value)
 
@@ -381,6 +385,7 @@ function stopAudioInteraction() {
     audioInteractionStarting.value = false
     void stopStreamingTranscription(true)
     disposeVAD()
+    perceptionPipeline.stop()
   })
 }
 
@@ -431,6 +436,26 @@ watch([stream, () => vadLoaded.value], async ([s, loaded]) => {
     catch (e) {
       console.error('Failed to start VAD with stream:', e)
     }
+  }
+})
+
+// Start/stop the perception pipeline when the mic stream or perception enabled state changes.
+const { cleanup: cleanupPerceptionAutoRespond } = usePerceptionAutoRespond({
+  send: prompt => void chatSyncStore.requestIngest({ text: prompt }),
+})
+
+watch([stream, () => perceptionStore.configured], async ([s, configured]) => {
+  if (enabled.value && configured && s && !perceptionPipeline.isRunning) {
+    try {
+      await perceptionPipeline.start(s)
+    }
+    catch (e) {
+      console.error('[Perception] Failed to start pipeline:', e)
+    }
+  }
+  else if ((!s || !configured || !enabled.value) && perceptionPipeline.isRunning) {
+    cleanupPerceptionAutoRespond()
+    perceptionPipeline.stop()
   }
 })
 

@@ -132,9 +132,26 @@ export function sharedUnoConfig() {
       presetTypography(),
       presetIcons({
         scale: 1.2,
+        // NOTICE:
+        // @iconify/utils v3 uses mlly for module resolution, which fails to locate
+        // @iconify-json/* packages in pnpm workspaces. Additionally, UnoCSS v66+
+        // skips the Node.js filesystem loader when VSCODE_CWD is set (Cursor/VS Code
+        // terminals). Explicitly providing collections via dynamic import bypasses
+        // both issues.
         collections: {
           ...createExternalPackageIconLoader('@proj-airi/lobe-icons'),
           ...createExternalPackageIconLoader('@proj-airi/iconify-meteocons'),
+          'carbon': () => import('@iconify-json/carbon/icons.json').then(i => i.default),
+          'eos-icons': () => import('@iconify-json/eos-icons/icons.json').then(i => i.default),
+          'logos': () => import('@iconify-json/logos/icons.json').then(i => i.default),
+          'lucide': () => import('@iconify-json/lucide/icons.json').then(i => i.default),
+          'mingcute': () => import('@iconify-json/mingcute/icons.json').then(i => i.default),
+          'ph': () => import('@iconify-json/ph/icons.json').then(i => i.default),
+          'simple-icons': () => import('@iconify-json/simple-icons/icons.json').then(i => i.default),
+          'solar': () => import('@iconify-json/solar/icons.json').then(i => i.default),
+          'svg-spinners': () => import('@iconify-json/svg-spinners/icons.json').then(i => i.default),
+          'tabler': () => import('@iconify-json/tabler/icons.json').then(i => i.default),
+          'vscode-icons': () => import('@iconify-json/vscode-icons/icons.json').then(i => i.default),
         },
       }),
       presetScrollbar(),

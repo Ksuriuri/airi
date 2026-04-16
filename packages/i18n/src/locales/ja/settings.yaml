@@ -447,6 +447,45 @@ pages:
               注意：プロバイダーが verbose_json レスポンスをサポートしていない場合、この設定は無効になります。
             verbose-json-unsupported: >-
               プロバイダーから verbose_json セグメントが返されませんでした。信頼度フィルタリングは最後の文字起こしに影響を及ぼしませんでした。
+    perception:
+      title: 環境認識
+      description: WebSocketによる環境音声分類
+      sections:
+        section:
+          connection:
+            title: 接続設定
+            description: 音声分類のWebSocketエンドポイントを設定する
+          audio:
+            title: オーディオ設定
+            description: オーディオエンコードとサンプルレートを設定する
+          threshold:
+            title: トリガー閾値
+            description: >-
+              音量が閾値を超えた場合のみ分類を行います。
+              大きな音のセグメントの前後に短いコンテキストを保持します。
+            volume-label: 音量閾値
+            volume-description: >-
+              音声キャプチャを開始する最小RMSレベル。値が低いほど感度が高くなります。
+              リアルタイムの音量メーターを見ながら調整してください。
+            padding-label: コンテキストパディング
+            padding-description: >-
+              分類器が周囲のコンテキストを取得できるように、大きな音のセグメントの前後に保持する秒数。
+          auto-respond:
+            label: 検出された音に自動応答
+            description: >-
+              有効にすると、環境で音声イベントが検出されたときにAIが自動的に応答します。
+              会話へのパッシブなコンテキスト注入のみにしたい場合は無効にしてください。
+          status:
+            enabled: 環境認識が有効です
+            disabled: 環境認識が無効です
+            connected: 分類サーバーに接続済み
+            disconnected: 未接続
+            running: パイプラインが実行中
+            stopped: パイプラインが停止中
+          test:
+            title: リアルタイム分類テスト
+            description: >-
+              環境からのリアルタイム音声分類結果を確認します。オーディオ入力デバイスが選択され、環境認識モジュールが有効になっていることを確認してください。
     memory-long-term:
       description: 長期記憶固有の設定と管理
       title: 長期記憶

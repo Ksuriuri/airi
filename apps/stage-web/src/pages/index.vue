@@ -12,12 +12,14 @@ import { useBackgroundThemeColor } from '@proj-airi/stage-layouts/composables/th
 import { useBackgroundStore } from '@proj-airi/stage-layouts/stores/background'
 import { HoloCoupon } from '@proj-airi/stage-ui/components'
 import { WidgetStage } from '@proj-airi/stage-ui/components/scenes'
+import { usePerceptionAutoRespond } from '@proj-airi/stage-ui/composables'
 import { useAudioRecorder } from '@proj-airi/stage-ui/composables/audio/audio-recorder'
 import { useVAD } from '@proj-airi/stage-ui/stores/ai/models/vad'
 import { useChatOrchestratorStore } from '@proj-airi/stage-ui/stores/chat'
 import { useLive2d } from '@proj-airi/stage-ui/stores/live2d'
 import { useConsciousnessStore } from '@proj-airi/stage-ui/stores/modules/consciousness'
 import { useHearingSpeechInputPipeline } from '@proj-airi/stage-ui/stores/modules/hearing'
+import { usePerceptionPipeline, usePerceptionStore } from '@proj-airi/stage-ui/stores/modules/perception'
 import { useProvidersStore } from '@proj-airi/stage-ui/stores/providers'
 import { useSettingsAudioDevice } from '@proj-airi/stage-ui/stores/settings'
 import { breakpointsTailwind, useBreakpoints, useMouse } from '@vueuse/core'
@@ -49,6 +51,8 @@ const { startRecord, stopRecord, onStopRecord } = useAudioRecorder(stream)
 const hearingPipeline = useHearingSpeechInputPipeline()
 const { transcribeForRecording } = hearingPipeline
 const { supportsStreamInput } = storeToRefs(hearingPipeline)
+const perceptionStore = usePerceptionStore()
+const perceptionPipeline = usePerceptionPipeline()
 const providersStore = useProvidersStore()
 const consciousnessStore = useConsciousnessStore()
 const { activeProvider: activeChatProvider, activeModel: activeChatModel } = storeToRefs(consciousnessStore)
@@ -122,6 +126,7 @@ function stopAudioInteraction() {
     stopOnStopRecord?.()
     stopOnStopRecord = undefined
     disposeVAD()
+    perceptionPipeline.stop()
   }
   catch {}
 }
@@ -147,6 +152,30 @@ watch([stream, () => vadLoaded.value], async ([s, loaded]) => {
     catch (e) {
       console.error('Failed to start VAD with stream:', e)
     }
+  }
+})
+
+const { cleanup: cleanupPerceptionAutoRespond } = usePerceptionAutoRespond({
+  send: async (prompt) => {
+    const provider = await providersStore.getProviderInstance(activeChatProvider.value)
+    if (!provider || !activeChatModel.value)
+      return
+    await chatStore.ingest(prompt, { model: activeChatModel.value, chatProvider: provider as ChatProvider })
+  },
+})
+
+watch([stream, () => perceptionStore.configured], async ([s, configured]) => {
+  if (enabled.value && configured && s && !perceptionPipeline.isRunning) {
+    try {
+      await perceptionPipeline.start(s)
+    }
+    catch (e) {
+      console.error('[Perception] Failed to start pipeline:', e)
+    }
+  }
+  else if ((!s || !configured || !enabled.value) && perceptionPipeline.isRunning) {
+    cleanupPerceptionAutoRespond()
+    perceptionPipeline.stop()
   }
 })
 </script>
